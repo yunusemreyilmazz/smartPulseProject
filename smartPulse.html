@@ -1,0 +1,129 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+    th{ 
+        color:#fff;
+            }
+</style>
+
+
+<table class="table table-striped">
+    <tr  class="bg-info">
+        <th>Tarih</th>
+        <th>Toplam Islem Tutari(TL)(Yuvarlanmistir)</th>
+        <th>Toplam Islem Miktari</th>
+        <th>Agirlikli Ortalama Fiyat(Yuvarlanmistir)</th>
+    </tr>
+
+    <tbody id="myTable">
+        
+    </tbody>
+</table>
+
+<script>
+   
+   var myarray=[]
+    fetch("./veri.json")
+    .then(response => response.json())
+    .then((data) =>{
+        const historyData=data.body.intraDayTradeHistoryList.map((p) =>{
+            return {
+                
+                Tarih: p.conract,
+                price: p.price,
+                quantity: p.quantity,
+                id:p.id, // I used this for "agirlikli fiyat"
+
+                
+        };
+        }) 
+
+
+       
+        let length=historyData.length;
+
+        
+        const newData = historyData.filter(historyData => historyData.Tarih[1] =="H");  //only "PH"
+        
+    
+        
+        totality=0
+       
+        //in here I sum all the same contract price
+        for(var i=0; i<newData.length;i++){
+            
+            for(var j=1;j<newData.length-1;j++){
+                if(newData[i].Tarih==newData[j].Tarih){
+                  totality=(newData[j].price*newData[j].quantity)/10;   //Toplam İşlem Tutarı = İlgili conract’a ait sınıfların (price*quantity)/10 değerlerinin toplamı; 
+                  newData[i].price=Math.round(totality+newData[i].price) //rounded 
+                }        
+            }
+        }
+
+        totalQuantity=0
+        for(var i=0; i<newData.length;i++){
+            
+            for(var j=1;j<newData.length-1;j++){
+                if(newData[i].Tarih==newData[j].Tarih){
+
+                  totalQuantity=(newData[j].quantity)/10        //Toplam İşlem Miktarı = İlgili conract’a ait sınıfların quantity/10 değerlerinin toplamı;
+
+                  newData[i].quantity=Math.round(totalQuantity+newData[i].quantity )  //Removed floating point numbers             
+                }
+                
+            }
+        }
+       
+    
+        // converting to appropriate format
+        for(var i=0;i<newData.length;i++){
+            var st=newData[i].Tarih
+            newData[i].Tarih=st[6]+st[7]+"/"+st[4]+st[5]+"/"+"20"+st[2]+st[3]+" "+st[8]+st[9]+":00"                //"PH22012701
+        }
+
+
+        //removing duplication part
+        let uniqueArr = [];
+        
+        const removeDuplicatesFromArrayByProperty = (arr, prop) => arr.reduce((accumulator, currentValue) => {
+            if(!accumulator.find(obj => obj[prop] === currentValue[prop])){
+                 accumulator.push(currentValue);
+            }
+            return accumulator;
+        }, [])
+        
+        uniqueArr=removeDuplicatesFromArrayByProperty(newData,"Tarih");
+        
+        for(var i=0;i<uniqueArr.length;i++){
+            uniqueArr[i].id=Math.round(uniqueArr[i].price/uniqueArr[i].quantity)
+        }
+        
+
+        console.log("sad")
+        
+        buildTable(uniqueArr);
+    })
+    
+    
+
+
+	function buildTable(data){
+		var table = document.getElementById('myTable')
+
+		for (var i = 0; i < data.length; i++){
+			var row = `<tr>
+							<td>${data[i].Tarih}</td>
+							<td>${data[i].price} TL</td>
+							<td>${data[i].quantity}</td>
+                            <td>${data[i].id} TL</td>
+
+					  </tr>`// .id for "agirlikli ortalama fiyat"
+			table.innerHTML += row
+
+
+		}
+	}
+
+</script>
