@@ -1,3 +1,4 @@
+[Smartpulse Internship Coding_Task 2022.pdf](https://github.com/yunusemreyilmazz/smartPulseProject/files/8455243/Smartpulse.Internship.Coding_Task.2022.pdf)
 # smartPulseProject
  An Internship Project
  
